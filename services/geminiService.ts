@@ -1,5 +1,4 @@
-
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "https://esm.sh/@google/genai@1.34.0";
 import { UserProfile, ChatMessage } from "../types";
 
 /**
@@ -13,14 +12,10 @@ export const getAssistantResponse = async (
   history: ChatMessage[]
 ): Promise<{ text: string; sources: Array<{ title: string; uri: string }> }> => {
   try {
-    // Fix: Initialize GoogleGenAI with a named parameter and use process.env.API_KEY directly.
-    // Assume the API key is pre-configured in the environment.
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    // Fix: Replace non-existent properties 'cancerType' and 'treatmentStatus' with 'diagnosis' and 'medical_history' from UserProfile type.
     const userContext = `用户昵称: ${userProfile.name}, 诊断: ${userProfile.diagnosis || '未知'}, 病史: ${userProfile.medical_history || '未知'}, 咨询专题: ${category}`;
 
-    // Fix: Use ai.models.generateContent directly and structure contents as required.
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: { parts: [{ text: `${userContext}\n提问内容: ${query}` }] },
@@ -30,7 +25,6 @@ export const getAssistantResponse = async (
       },
     });
 
-    // Fix: Access response.text as a property, not a method.
     return {
       text: response.text || "抱歉，我现在思绪有点乱，能请您换个方式问我吗？",
       sources: []

@@ -1,4 +1,4 @@
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI, Modality } from "https://esm.sh/@google/genai@1.34.0";
 
 export class GeminiService {
   private static initAI() {

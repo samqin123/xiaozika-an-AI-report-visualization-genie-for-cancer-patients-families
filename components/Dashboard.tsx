@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, Legend, ReferenceArea, AreaChart, Area
-} from 'recharts';
+  ResponsiveContainer, Legend, ReferenceArea
+} from 'https://esm.sh/recharts@3.6.0';
 import { 
   Trash2, Plus, TrendingUp, ChevronRight, Activity, 
   ShieldAlert, Thermometer, Droplet, Stethoscope, Maximize2 
-} from 'lucide-react';
+} from 'https://esm.sh/lucide-react@0.562.0';
 import { DashboardWidget, MedicalRecord, MonitoringScenario, TreatmentPhase } from '../types';
 
 const SCENARIOS: MonitoringScenario[] = [
@@ -46,7 +46,6 @@ export const DashboardView: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-8 pb-32 animate-in fade-in slide-in-from-bottom-5 duration-700">
-      {/* 顶部标题 */}
       <div className="flex justify-between items-end px-1">
         <div>
           <h2 className={`${seniorMode ? 'text-4xl' : 'text-3xl'} font-black text-gray-900 tracking-tight`}>指标监测</h2>
@@ -60,7 +59,6 @@ export const DashboardView: React.FC<DashboardProps> = ({
         </button>
       </div>
 
-      {/* 快速方案切换 - 一键监测 */}
       <div className="space-y-3 px-1">
         <div className="flex items-center justify-between">
           <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">预设监测方案</h3>
@@ -93,14 +91,12 @@ export const DashboardView: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* 动态折线图列表 */}
       <div className="grid grid-cols-1 gap-8">
         {filteredWidgets.map(w => (
           <WidgetCard key={w.id} widget={w} records={records} phases={phases} onDelete={onDeleteWidget} seniorMode={seniorMode} />
         ))}
       </div>
 
-      {/* 底部 AI 见解卡片 */}
       <div className="bg-white p-8 rounded-[3rem] border border-purple-50 shadow-sm relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-125 transition-transform duration-1000">
            <TrendingUp size={140} />
@@ -110,7 +106,7 @@ export const DashboardView: React.FC<DashboardProps> = ({
            <h3 className="font-black text-xl text-gray-900">AI 趋势分析</h3>
         </div>
         <p className="text-gray-600 leading-relaxed text-sm mb-8">
-          基于您 <span className="text-purple-600 font-bold underline">FOLFIRINOX</span> 方案期间的指标表现，CA19-9 呈显著下降趋势。目前中性粒细胞处于安全范围，建议维持当前营养支持。
+          基于您近期上传的报告，CA19-9 呈显著下降趋势。目前中性粒细胞处于安全范围，建议维持当前营养支持，保持良好心态。
         </p>
         <button onClick={onOpenAI} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black py-5 rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-purple-100 active:scale-95 transition-all">
           对话深度讨论 <ChevronRight size={18} />
@@ -144,10 +140,6 @@ const WidgetCard: React.FC<{
       <div className="flex justify-between items-start mb-8">
         <div>
           <h3 className={`${seniorMode ? 'text-2xl' : 'text-lg'} font-black text-gray-900 tracking-tight`}>{widget.title}</h3>
-          <div className="flex items-center gap-2 mt-1">
-             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">一致性趋势：向好</span>
-          </div>
         </div>
         <button onClick={() => onDelete(widget.id)} className="opacity-0 group-hover:opacity-100 p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
           <Trash2 size={18} />
@@ -162,11 +154,9 @@ const WidgetCard: React.FC<{
             <YAxis tick={{fontSize: 10, fontWeight: 800, fill: '#cbd5e1'}} axisLine={false} tickLine={false} hide={seniorMode} />
             <Tooltip 
               contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 50px rgba(124,58,237,0.15)', fontSize: '12px', fontWeight: 'bold', padding: '16px' }}
-              itemStyle={{ padding: '2px 0' }}
             />
             <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{paddingBottom: '20px', fontSize: '11px', fontWeight: 'bold'}} />
             
-            {/* 治疗进程联动阴影区 */}
             {phases.map((p) => (
               <ReferenceArea 
                 key={p.id}
@@ -174,7 +164,6 @@ const WidgetCard: React.FC<{
                 x2={p.end_date ? p.end_date.slice(5) : sortedData[sortedData.length - 1]?.name} 
                 fill={p.color} 
                 fillOpacity={0.06}
-                label={{ value: p.name, position: 'insideTopLeft', fontSize: 9, fill: p.color, fontWeight: '900', offset: 10 }}
               />
             ))}
 
@@ -187,9 +176,7 @@ const WidgetCard: React.FC<{
                 stroke={colors[i % colors.length]} 
                 strokeWidth={seniorMode ? 6 : 4} 
                 dot={{r: 6, fill: '#fff', strokeWidth: 4, stroke: colors[i % colors.length]}} 
-                activeDot={{r: 10, strokeWidth: 0}}
                 connectNulls
-                animationDuration={1500}
               />
             ))}
           </LineChart>

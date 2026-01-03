@@ -1,20 +1,17 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
 /**
- * Supabase client initialization.
- * 
- * We prioritize environment variables but provide the project-specific 
- * credentials as defaults to ensure the app works out-of-the-box in the 
- * preview environment.
+ * Supabase 客户端初始化
+ * 修复 EdgeOne 部署时 Rollup 无法解析 @supabase/supabase-js 的问题。
+ * 统一使用直接 URL 导入并保留环境变量支持。
  */
-const env = import.meta.env as Record<string, string | undefined>;
-const supabaseUrl = env.VITE_SUPABASE_URL;
-const supabaseKey = env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://wpgsdyiwzfcsfyimmbje.supabase.co';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_p3ccwxyoDqO6wBqcemVK7A_RWVNQ3HR';
 
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error(
-    'Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables. ' +
-      'Set them in Netlify (Site settings → Build & deploy → Environment → Environment variables).'
+  console.error(
+    '未检测到完整的 Supabase 配置。' +
+    '请在部署平台的设置中配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY。'
   );
 }
 
