@@ -1,0 +1,82 @@
+-- ==========================================
+-- 小紫卡增强版模拟数据导入脚本 (2024.09 - 2025.02)
+-- 包含内容：
+-- 1. 6个月月度报告 (肿瘤+血常规+肝功+肾功)
+-- 2. 过去2个月每周感染专项报告 (CRP+PCT+WBC)
+-- 3. 2个治疗阶段阴影区
+-- ==========================================
+
+DO $$
+DECLARE
+    v_user_id UUID;
+BEGIN
+    -- 1. 获取目标用户 ID
+    SELECT id INTO v_user_id FROM auth.users LIMIT 1;
+
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '未发现用户，请先在 App 中完成注册或快速登录后再执行此脚本';
+    END IF;
+
+    -- 2. 清理旧数据
+    DELETE FROM public.medical_records WHERE user_id = v_user_id;
+    DELETE FROM public.treatment_phases WHERE user_id = v_user_id;
+
+    -- 3. 插入治疗方案进程
+    INSERT INTO public.treatment_phases (user_id, name, start_date, end_date, color) VALUES
+    (v_user_id, 'FOLFIRINOX 强化期', '2024-09-01', '2024-11-30', '#7C3AED'),
+    (v_user_id, 'AG 方案维持期', '2024-12-01', NULL, '#3B82F6');
+
+    -- 4. 插入 6 份全项月度报告 (含肾功能 UREA, CREA, UA)
+    
+    -- [2024-09] 初始
+    INSERT INTO public.medical_records (user_id, date, type, indicators, hospital) VALUES
+    (v_user_id, '2024-09-12', 'Complex', 
+    '{"CA199": 650.8, "CEA": 15.2, "WBC": 7.5, "NEU_P": 66.5, "HGB": 136, "PLT": 245, "ALT": 40, "AST": 35, "ALP": 88, "CD4_CD8_RATIO": 0.82, "ALB": 44.5, "CREA": 85, "UREA": 5.5, "UA": 350}', 
+    '中山医院');
+
+    -- [2024-10] 化疗波动，肾功能指标轻微上升
+    INSERT INTO public.medical_records (user_id, date, type, indicators, hospital) VALUES
+    (v_user_id, '2024-10-15', 'Complex', 
+    '{"CA199": 380.4, "CEA": 9.5, "WBC": 4.8, "NEU_P": 55.2, "HGB": 122, "PLT": 180, "ALT": 75, "AST": 62, "ALP": 115, "CD4_CD8_RATIO": 0.95, "ALB": 41.0, "CREA": 92, "UREA": 6.2, "UA": 385}', 
+    '中山医院');
+
+    -- [2024-11] 强化末期，指标压力最大
+    INSERT INTO public.medical_records (user_id, date, type, indicators, hospital) VALUES
+    (v_user_id, '2024-11-20', 'Complex', 
+    '{"CA199": 92.6, "CEA": 4.8, "WBC": 3.1, "NEU_P": 40.5, "HGB": 108, "PLT": 135, "ALT": 58, "AST": 45, "ALP": 142, "CD4_CD8_RATIO": 1.15, "ALB": 38.5, "CRP": 12.8, "CREA": 98, "UREA": 6.8, "UA": 410}', 
+    '中山医院');
+
+    -- [2024-12] 维持期开始，各项恢复
+    INSERT INTO public.medical_records (user_id, date, type, indicators, hospital) VALUES
+    (v_user_id, '2024-12-18', 'Complex', 
+    '{"CA199": 45.2, "CEA": 2.5, "WBC": 5.2, "NEU_P": 59.1, "HGB": 125, "PLT": 205, "ALT": 32, "AST": 28, "ALP": 90, "CD4_CD8_RATIO": 1.52, "ALB": 42.8, "CREA": 88, "UREA": 5.8, "UA": 340}', 
+    '瑞金医院');
+
+    -- [2025-01] 维持期稳态
+    INSERT INTO public.medical_records (user_id, date, type, indicators, hospital) VALUES
+    (v_user_id, '2025-01-20', 'Complex', 
+    '{"CA199": 34.8, "CEA": 1.8, "WBC": 6.1, "NEU_P": 63.2, "HGB": 132, "PLT": 230, "ALT": 25, "AST": 22, "ALP": 82, "CD4_CD8_RATIO": 1.75, "ALB": 45.2, "CREA": 82, "UREA": 5.2, "UA": 315}', 
+    '瑞金医院');
+
+    -- [2025-02] 最新报告
+    INSERT INTO public.medical_records (user_id, date, type, indicators, hospital) VALUES
+    (v_user_id, '2025-02-18', 'Complex', 
+    '{"CA199": 28.5, "CEA": 1.2, "WBC": 6.8, "NEU_P": 65.4, "HGB": 138, "PLT": 258, "ALT": 20, "AST": 19, "ALP": 75, "CD4_CD8_RATIO": 1.92, "ALB": 46.5, "CREA": 78, "UREA": 4.8, "UA": 295}', 
+    '瑞金医院');
+
+    -- 5. 插入 1月-2月 每周一次的感染指标专项报告 (WBC, CRP, PCT)
+    
+    -- 1月周测
+    INSERT INTO public.medical_records (user_id, date, type, indicators) VALUES
+    (v_user_id, '2025-01-05', 'Infection', '{"WBC": 5.5, "CRP": 4.2, "PCT": 0.02}'),
+    (v_user_id, '2025-01-12', 'Infection', '{"WBC": 5.8, "CRP": 3.8, "PCT": 0.02}'),
+    (v_user_id, '2025-01-27', 'Infection', '{"WBC": 6.3, "CRP": 8.5, "PCT": 0.03}'); -- 轻微波动
+
+    -- 2月周测
+    INSERT INTO public.medical_records (user_id, date, type, indicators) VALUES
+    (v_user_id, '2025-02-03', 'Infection', '{"WBC": 6.0, "CRP": 5.1, "PCT": 0.02}'),
+    (v_user_id, '2025-02-10', 'Infection', '{"WBC": 6.2, "CRP": 4.5, "PCT": 0.01}'),
+    (v_user_id, '2025-02-25', 'Infection', '{"WBC": 7.0, "CRP": 3.2, "PCT": 0.01}');
+
+    RAISE NOTICE '增强版数据导入成功：已包含 6个月肾功趋势 及 过去2个月每周感染指标监测。';
+END $$;

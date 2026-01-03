@@ -1,0 +1,130 @@
+-- ==========================================
+-- 小紫卡数据库初始化全量脚本 (3.0 旗舰版)
+-- 深度适配：全量血常规、深度生化、全套免疫亚群、肿瘤标志物
+-- ==========================================
+
+-- 1. 创建个人档案
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  name TEXT DEFAULT '患者',
+  senior_mode BOOLEAN DEFAULT FALSE,
+  diagnosis TEXT,
+  medical_history TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. 全量指标元数据定义
+CREATE TABLE IF NOT EXISTS public.indicator_definitions (
+  code TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  unit TEXT,
+  ref_range TEXT
+);
+
+-- 插入/更新指标 (覆盖所有 3 张报告图片的内容)
+INSERT INTO public.indicator_definitions (code, name, category, unit, ref_range) VALUES
+-- [血常规 - 完整 24 项]
+('WBC', '白细胞计数', 'Blood', '10^9/L', '3.5-9.5'),
+('LYM_P', '淋巴细胞%', 'Blood', '%', '20.0-50.0'),
+('MONO_P', '单核细胞%', 'Blood', '%', '3.0-10.0'),
+('NEU_P', '中性粒细胞%', 'Blood', '%', '40.0-75.0'),
+('LYM_N', '淋巴细胞数', 'Blood', '10^9/L', '1.1-3.2'),
+('MONO_N', '单核细胞数', 'Blood', '10^9/L', '0.1-0.6'),
+('NEU_N', '中性粒细胞数', 'Blood', '10^9/L', '1.8-6.3'),
+('RBC', '红细胞计数', 'Blood', '10^12/L', '4.3-5.8'),
+('HGB', '血红蛋白', 'Blood', 'g/L', '130-175'),
+('HCT', '红细胞压积', 'Blood', '%', '40-50'),
+('MCV', '平均RBC体积', 'Blood', 'fL', '82.0-100.0'),
+('MCH', 'RBC平均HGB', 'Blood', 'pg', '27.0-34.0'),
+('MCHC', '平均HGB浓度', 'Blood', 'g/L', '316-354'),
+('PLT', '血小板计数', 'Blood', '10^9/L', '125-350'),
+('MPV', '平均PLT容积', 'Blood', 'fL', '7.4-10.4'),
+('PLT_PCT', '血小板压积', 'Blood', '%', '0.15-0.30'),
+('PDW', 'PLT分布宽度', 'Blood', '%', '13-21'),
+('EOS_N', '嗜酸性细胞数', 'Blood', '10^9/L', '0.02-0.52'),
+('EOS_P', '嗜酸性细胞%', 'Blood', '%', '0.4-8.0'),
+('BASO_N', '嗜碱性细胞数', 'Blood', '10^9/L', '0.00-0.06'),
+('BASO_P', '嗜碱性细胞%', 'Blood', '%', '0.00-1.00'),
+('RDW_SD', 'RDW-SD', 'Blood', 'fL', '36.0-46.0'),
+('RDW_CV', 'RDW-CV', 'Blood', '%', '11.7-14.4'),
+('NLR', '中性淋巴比值', 'Blood', '', ''),
+
+-- [深度生化 - 图片2]
+('TBIL', '总胆红素', 'Liver', 'μmol/L', '≤26'),
+('DBIL', '直接胆红素', 'Liver', 'μmol/L', '≤8'),
+('IBIL', '间接胆红素', 'Liver', 'μmol/L', '0-12'),
+('ALP', '碱性磷酸酶', 'Liver', 'U/L', '45-125'),
+('ALT', '谷丙转氨酶', 'Liver', 'U/L', '9-50'),
+('AST', '谷草转氨酶', 'Liver', 'U/L', '15-40'),
+('LDH', '乳酸脱氢酶', 'Liver', 'U/L', '120-250'),
+('GGT', '谷氨酰转肽酶', 'Liver', 'U/L', '10-60'),
+('TP', '总蛋白', 'Liver', 'g/L', '65-85'),
+('ALB', '白蛋白', 'Liver', 'g/L', '40-55'),
+('GLO', '球蛋白', 'Liver', 'g/L', '20-40'),
+('AG_RATIO', '白球比例', 'Liver', '', '1.2-2.4'),
+('PA', '前白蛋白', 'Liver', 'mg/L', '250-400'),
+('UREA', '尿素', 'Renal', 'mmol/L', '3.1-8'),
+('CREA', '肌酐', 'Renal', 'μmol/L', '57-97'),
+('UA', '尿酸', 'Renal', 'μmol/L', '208-428'),
+('GLU', '葡萄糖', 'Metabolism', 'mmol/L', '3.9-6.1'),
+('FFA', '游离脂肪酸', 'Metabolism', 'mmol/L', '0.1-0.6'),
+('GLDH', '谷氨酸脱氢酶', 'Liver', 'U/L', '0-7'),
+
+-- [免疫细胞亚群 - 图片1]
+('T_CELL_P', 'T淋巴细胞%', 'Bio', '%', '50-84'),
+('CD4_P', '辅助T细胞(CD4+)', 'Bio', '%', '27-51'),
+('CD8_P', '抑制T细胞(CD8+)', 'Bio', '%', '15-41'),
+('CD4_CD8_RATIO', 'CD4/CD8比值', 'Bio', '', '0.75-2.81'),
+('CD4_NAIVE_P', 'CD4+纯真T细胞%', 'Bio', '%', '7.20-68.90'),
+('CD8_NAIVE_P', 'CD8+纯真T细胞%', 'Bio', '%', '2.60-72.40'),
+('CD4_EM_P', 'CD4+效应记忆T%', 'Bio', '%', '4.90-43.60'),
+('CD4_CM_P', 'CD4+中央记忆T%', 'Bio', '%', '15.00-64.30'),
+('CD8_EM_P', 'CD8+效应记忆T%', 'Bio', '%', '1.60-62.00'),
+('CD8_CM_P', 'CD8+中央记忆T%', 'Bio', '%', '2.70-32.60'),
+('CD4_ACT_EM_P', 'CD4+活化效应记忆T%', 'Bio', '%', '50.88-'),
+('CD4_ACT_CM_P', 'CD4+活化中央记忆T%', 'Bio', '%', ''),
+('CD8_ACT_EM_P', 'CD8+活化效应记忆T%', 'Bio', '%', ''),
+('TREG_P', '调节性T细胞%', 'Bio', '%', '5.10-12.70'),
+('CD8_PD1_P', 'CD8+PD1+/CD8+%', 'Bio', '%', '4.21-44.89'),
+('CD8_CD39_P', 'CD8+CD39+/CD8+%', 'Bio', '%', ''),
+('CD8_CD40L_P', 'CD8+CD40L+/CD8+%', 'Bio', '%', ''),
+('CD8_OX40_P', 'CD8+OX40+/CD8+%', 'Bio', '%', ''),
+('CD8_CD226_P', 'CD8+CD226-/CD8+%', 'Bio', '%', ''),
+
+-- [肿瘤标志物与感染]
+('CA199', '糖类抗原19-9', 'Tumor', 'U/mL', '0-37'),
+('CEA', '癌胚抗原', 'Tumor', 'ng/mL', '0-5'),
+('CRP', 'C反应蛋白', 'Infection', 'mg/L', '0-10'),
+('PCT', '降钙素原', 'Infection', 'ng/mL', '0-0.5')
+ON CONFLICT (code) DO UPDATE SET 
+  name = EXCLUDED.name, category = EXCLUDED.category, unit = EXCLUDED.unit, ref_range = EXCLUDED.ref_range;
+
+-- 3. 结构化病历记录表
+CREATE TABLE IF NOT EXISTS public.medical_records (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  date DATE NOT NULL,
+  type TEXT NOT NULL,
+  indicators JSONB NOT NULL,
+  hospital TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. 治疗方案阶段表
+CREATE TABLE IF NOT EXISTS public.treatment_phases (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE,
+  color TEXT DEFAULT '#7C3AED'
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.medical_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.treatment_phases ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can see their own data" ON public.profiles FOR ALL USING (auth.uid() = id);
+CREATE POLICY "Users can manage their own records" ON public.medical_records FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage their phases" ON public.treatment_phases FOR ALL USING (auth.uid() = user_id);
